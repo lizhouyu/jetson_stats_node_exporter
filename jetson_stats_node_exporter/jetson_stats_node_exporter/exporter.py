@@ -1,7 +1,7 @@
 from prometheus_client.core import GaugeMetricFamily
 from .logger import factory
 from .jtop_stats import JtopObservable
-
+import json
 
 class Jetson(object):
     def __init__(self, update_period=1):
@@ -40,7 +40,7 @@ class JetsonExporter(object):
                 cpu_gauge.add_metric([str(core_number), "freq"], value=core_data["freq"]["cur"])
                 cpu_gauge.add_metric([str(core_number), "min_freq"], value=core_data["freq"]["min"])
                 cpu_gauge.add_metric([str(core_number), "max_freq"], value=core_data["freq"]["max"])
-                cpu_gauge.add_metric([str(core_number), "val"], value=core_data["idle"])
+                cpu_gauge.add_metric([str(core_number), "idle"], value=core_data["idle"])
         return cpu_gauge
 
     def __gpu(self):
@@ -50,6 +50,7 @@ class JetsonExporter(object):
             labels=["statistic", "nvidia_gpu"],
             unit="Hz"
         )
+
 
         gpu_names = self.jetson.jtop_stats["gpu"].keys()
 
@@ -135,16 +136,16 @@ class JetsonExporter(object):
     def __integrated_power_machine_parts(self):
         power_gauge = GaugeMetricFamily(
             name="integrated_power",
-            documentation="Power Statistics from internal power sensors (unit: mW/mV/mA)",
+            documentation="Power Statistics from internal power sensors (unit: mW/V/A)",
             labels=["statistic", "machine_part", "system_critical"]
         )
-        if "rail" in self.jetson.jtop_stats["pwr"]:
-            for part, reading in self.jetson.jtop_stats["pwr"]["rail"].items():
-                power_gauge.add_metric(["voltage", part], value=reading["volt"])
-                power_gauge.add_metric(["current", part], value=reading["curr"])
-                power_gauge.add_metric(["critical", part], value=reading["warn"])
-                power_gauge.add_metric(["power", part], value=reading["power"])
-                power_gauge.add_metric(["avg_power", part], value=reading["avg"])
+
+        for part, reading in self.jetson.jtop_stats["pwr"]["rail"].items():
+            power_gauge.add_metric(["voltage"], value=reading["volt"])
+            power_gauge.add_metric(["current"], value=reading["curr"])
+            power_gauge.add_metric(["critical"], value=reading["warn"])
+            power_gauge.add_metric(["power"], value=reading["power"])
+            power_gauge.add_metric(["avg_power"], value=reading["avg"])
 
         return power_gauge
 
@@ -156,9 +157,8 @@ class JetsonExporter(object):
             unit="mW"
         )
 
-        if "rail" in self.jetson.jtop_stats["pwr"]:
-            power_gauge.add_metric(["power"], value=self.jetson.jtop_stats["pwr"]["tot"]["power"])
-            power_gauge.add_metric(["avg_power"], value=self.jetson.jtop_stats["pwr"]["tot"]["avg"])
+        power_gauge.add_metric(["power"], value=self.jetson.jtop_stats["pwr"]["tot"]["power"])
+        power_gauge.add_metric(["avg_power"], value=self.jetson.jtop_stats["pwr"]["tot"]["avg"])
 
         return power_gauge
 

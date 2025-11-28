@@ -27,7 +27,7 @@ def cli():
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', type=int, nargs='?', default=9100, help='Node exporter port')
     parser.add_argument('--update_period', type=int, nargs='?', default=1, help='Querying speed.')
-    parser.add_argument('--logfile_cleanup_interval_hours', type=int, nargs='?', default=24,
+    parser.add_argument('--logfile_cleanup_interval_hours', type=int, nargs='?', default=2,
                         help='Local log cleanup frequency.')
     return vars(parser.parse_args())
 

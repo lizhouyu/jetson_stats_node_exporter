@@ -1,0 +1,17 @@
+services:
+  jetson_stats_node_exporter:
+    image: lizhouyu/jetson_stats_node_exporter:jtop.4.3.1
+    restart: unless-stopped
+    ports:
+      - "9100:9100"  # Map internal port 9100 to a different external port 9100
+    volumes:
+      - /run/jtop.sock:/run/jtop.sock
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:9100/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    # get permission for sudo command
+    cap_add:
+      - SYS_ADMIN
